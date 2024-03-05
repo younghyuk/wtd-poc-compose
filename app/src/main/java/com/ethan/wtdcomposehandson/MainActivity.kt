@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,11 +16,16 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.random.Random
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,10 +40,33 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun WtdScreen() {
+    val defaultList = (1..10).toList()
+    var numbers by remember { mutableStateOf(defaultList) }
+
+    val onAddClicked = {
+        numbers = numbers.toMutableList().apply {
+            add(Random.nextInt())
+        }
+    }
+    val onRemoveClicked = {
+        numbers = numbers.toMutableList().apply {
+            if (isNotEmpty()) {
+                removeLast()
+            }
+        }
+    }
+    val onResetClicked = {
+        numbers = defaultList
+    }
+
     Column {
         TopTitleBar()
-        ActionsRow()
-        ItemList()
+        ActionsRow(
+            onAddClicked,
+            onRemoveClicked,
+            onResetClicked
+        )
+        ItemList(numbers)
     }
 }
 
@@ -59,31 +88,35 @@ fun TopTitleBar() {
 }
 
 @Composable
-fun ActionsRow() {
+fun ActionsRow(
+    onAddClicked: () -> Unit,
+    onRemoveClicked: () -> Unit,
+    onResetClicked: () -> Unit
+) {
     Row {
-        ActionButton(text = "추가", Color(0xFFD9D9D9))
-        ActionButton(text = "삭제", Color(0xFF944B4B))
-        ActionButton(text = "초기화", Color(0xFF84D59F))
+        ActionButton(text = "추가", Color(0xFFD9D9D9), onAddClicked)
+        ActionButton(text = "삭제", Color(0xFF944B4B), onRemoveClicked)
+        ActionButton(text = "초기화", Color(0xFF84D59F), onResetClicked)
     }
 }
 
 @Composable
-fun ActionButton(text: String, backgroundColor: Color) {
+fun ActionButton(text: String, backgroundColor: Color, onClicked: () -> Unit) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .size(100.dp)
             .background(backgroundColor)
+            .clickable { onClicked() }
     ) {
         Text(text = text, fontSize = 24.sp)
     }
 }
 
 @Composable
-fun ItemList() {
-    val itemList = (1..10).toList()
+fun ItemList(numbers: List<Int>) {
     LazyColumn(modifier = Modifier.fillMaxSize()) {
-        items(itemList) { NumberItem(it) }
+        items(numbers) { NumberItem(it) }
     }
 }
 
